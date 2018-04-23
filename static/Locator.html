@@ -26,16 +26,10 @@
 		<select id="body">
 			<option value="moon">Moon</option>
 			<option value="sun">Sun</option>
-			<option value="Mercury">Mercury</option>
-			<option value="Venus">Venus</option>
-			<option value="Mars">Mars</option>
-			<option value="Jupiter">Jupiter</option>
-			<option value="Saturn">Saturn</option>
-			<option value="Uranus">Uranus</option>
-			<option value="Neptune">Neptune</option>
-			<option value="pluto">Pluto</option>
 		</select>
 		<button onclick = "search()">Search</button>
+		
+		<h2 id = "lat"></h2>
 	</div>
     <div id="map" class=widCol></div>
 	    <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
@@ -45,17 +39,13 @@
     </script>
 	
 	<script>
+		Map = 0
 		function initMap(){
 			var c = {lat: 0, lng: 0}
-			var map = new google.maps.Map(document.getElementById("map"), {zoom: 4, center: c})
-			var markers = locations.map(function(location, i){
-				return new google.maps.Marker({position: location, label: "A"})
-				})
-			var markerCluster = new MarkerClusterer(map, markers,
-            {imagePath: "https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m"});
+			var map = new google.maps.Map(document.getElementById("map"), {zoom:2, center: c})
+			Map = map
 		} 
-		var locations = []
-		
+		markers = [0]
 		function search(){
 			let config = {}
 			let body = document.getElementById("body").value
@@ -64,17 +54,37 @@
 			month = date.substring(5,7)
 			day = date.substring(8,10)
 			
-			config.method = "POST"
+			config.method = "GET"
 			config.body = JSON.stringify({bod: body, d: day, mon: month, yr: year})
 			config.headers = {"Content-Type":"application/json", "Accept":"application/json"}
-			console.log(year, month, day)
-			fetch("http://localhost:5001/search?body="+body+"/day="+day+"/month="+month+"/year="+year)
+			//console.log(year, month, day)
+			fetch("http://localhost:5001/search?body="+body+"&day="+day+"&month="+month+"&year="+year)
 				.then(function(response){
-					console.log(response)
-					return response.json()
-					})
-				.catch(error => console.error("Error :", error))
-		}
+					//console.log(response)
+					//console.log(response.json)
+					return response.json()})
+					.then(function(myJson){
+						document.getElementById("lat").innerHTML = myJson})
+				.then(function(){
+					var co = document.getElementById("lat").innerHTML
+					document.getElementById("lat").innerHTML=""
+					//console.log(co)
+					co = co.split(",")
+					//console.log(co)
+					lg = Number(co[0])*15+Number(co[1])/60+Number(co[2])/3600
+					lt = Number(co[3])+Number(co[4])/60+Number(co[5])/3600
+					//console.log(lt)
+					//console.log(lg)
+					if(lg>180){
+						lg = lg -360}
+					var coord = {lat: lt, lng: lg}
+					//console.log(coord)
+					initMap()
+					markers[0] = new google.maps.Marker({position: coord, title:"Lat: "+lt+"\nLng: "+lg})
+					
+					markers[0].setMap(Map)
+			})}
+
 	</script>
   </body>
 </html>
